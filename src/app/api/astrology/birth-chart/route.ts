@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       distance: p.distance
     }));
     
-    // For now, return a simple ascendant placeholder
+    // Simple ascendant calculation (placeholder)
     const ascendant = { 
       sign: 'Leo', 
       degree: 15.5,
@@ -53,4 +53,23 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Add GET handler for browser testing
+export async function GET() {
+  return NextResponse.json({
+    message: "✨ Astrology API is live!",
+    usage: {
+      method: "POST",
+      endpoint: "/api/astrology/birth-chart",
+      body: {
+        datetime: "1990-06-15T18:30:00Z",
+        latitude: 40.7128,
+        longitude: -74.0060
+      },
+      notes: "Send a POST request with birth details to get your birth chart",
+      test_page: "/test-astrology"
+    },
+    status: "API is working! Use Thunder Client or POST requests to interact."
+  });
 }
