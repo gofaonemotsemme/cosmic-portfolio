@@ -1,34 +1,48 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import Image from 'next/image'
+import { useState, useEffect } from 'react'
 
 export default function Hero() {
+  const [stars, setStars] = useState<Array<{ x: number; y: number }>>([])
+
+  // Generate stars only on the client after mount
+  useEffect(() => {
+    const newStars = Array.from({ length: 50 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+    }))
+    setStars(newStars)
+  }, [])
+
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Animated stars background */}
-      <div className="absolute inset-0">
-        {[...Array(50)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [null, -30, null],
-              opacity: [0.2, 1, 0.2],
-            }}
-            transition={{
-              duration: Math.random() * 3 + 2,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          />
-        ))}
-      </div>
+      {/* Animated stars background - only render if stars exist */}
+      {stars.length > 0 && (
+        <div className="absolute inset-0">
+          {stars.map((star, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              initial={{
+                x: star.x,
+                y: star.y,
+              }}
+              animate={{
+                y: [star.y, star.y - 30, star.y],
+                opacity: [0.2, 1, 0.2],
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          ))}
+        </div>
+      )}
 
+      {/* Rest of your component (unchanged) */}
       <div className="container mx-auto px-4 z-10">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <motion.div
