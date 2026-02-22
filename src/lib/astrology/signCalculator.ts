@@ -1,36 +1,35 @@
-// Zodiac signs with their ranges (0-360°)
 export const ZODIAC_SIGNS = [
-  "Aries",       // 0-30
-  "Taurus",      // 30-60
-  "Gemini",      // 60-90
-  "Cancer",      // 90-120
-  "Leo",         // 120-150
-  "Virgo",       // 150-180
-  "Libra",       // 180-210
-  "Scorpio",     // 210-240
-  "Sagittarius", // 240-270
-  "Capricorn",   // 270-300
-  "Aquarius",    // 300-330
-  "Pisces"       // 330-360
+  "Aries", "Taurus", "Gemini", "Cancer", 
+  "Leo", "Virgo", "Libra", "Scorpio", 
+  "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+];
+
+export const ZODIAC_SYMBOLS = [
+  "♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"
 ];
 
 /**
- * Convert ecliptic longitude to zodiac sign and degree within sign
- * @param longitude Ecliptic longitude in degrees (0-360)
- * @returns Object with sign name and degree within that sign (0-30)
+ * Get zodiac sign from ecliptic longitude
  */
-export function getZodiacSign(longitude: number): { sign: string; degree: number } {
-  // Normalize longitude to 0-360
-  const normalizedLong = ((longitude % 360) + 360) % 360;
+export function getZodiacSign(longitude: number): { 
+  sign: string; 
+  symbol: string;
+  degree: number;
+  element: string;
+  modality: string;
+} {
+  const normLong = ((longitude % 360) + 360) % 360;
+  const signIndex = Math.floor(normLong / 30);
+  const degreeInSign = normLong % 30;
   
-  // Calculate sign index (0-11)
-  const signIndex = Math.floor(normalizedLong / 30);
-  
-  // Degree within the sign (0-30)
-  const degreeInSign = normalizedLong % 30;
+  const elements = ["Fire", "Earth", "Air", "Water"];
+  const modalities = ["Cardinal", "Fixed", "Mutable"];
   
   return {
     sign: ZODIAC_SIGNS[signIndex],
-    degree: degreeInSign
+    symbol: ZODIAC_SYMBOLS[signIndex],
+    degree: degreeInSign,
+    element: elements[Math.floor(signIndex / 3) % 4],
+    modality: modalities[signIndex % 3]
   };
 }
