@@ -1,87 +1,73 @@
-import { 
-  MakeTime, 
-  GeoVector, 
-  GeoMoon, 
-  Ecliptic,
-  Body 
-} from 'astronomy-engine';
+import { GeoVector, GeoMoon, Ecliptic, Body } from 'astronomy-engine';
 
-// Body is an enum with values like:
-// Body.Sun, Body.Moon, Body.Mercury, Body.Venus, Body.Earth, Body.Mars, etc.
+export type PlanetName = 'Sun' | 'Moon' | 'Mercury' | 'Venus' | 'Mars' | 'Jupiter' | 
+                         'Saturn' | 'Uranus' | 'Neptune' | 'Pluto';
 
-// List of bodies we want (excluding Earth)
-const BODIES = [
-  Body.Sun,
-  Body.Moon,
-  Body.Mercury,
-  Body.Venus,
-  Body.Mars,
-  Body.Jupiter,
-  Body.Saturn,
-  Body.Uranus,
-  Body.Neptune,
-  Body.Pluto
-];
-
-/**
- * Convert Date to AstroTime format
- */
-function dateToAstroTime(date: Date) {
-  return MakeTime(date);
+export interface PlanetData {
+  name: PlanetName;
+  longitude: number;
+  latitude: number;
+  distance: number;
 }
 
+export interface PlanetsResult {
+  planets: PlanetData[];
+  houses: number[];
+}
+
+// Map planet names to Body enum values
+const planetToBody: Record<Exclude<PlanetName, 'Moon'>, Body> = {
+  'Sun': Body.Sun,
+  'Mercury': Body.Mercury,
+  'Venus': Body.Venus,
+  'Mars': Body.Mars,
+  'Jupiter': Body.Jupiter,
+  'Saturn': Body.Saturn,
+  'Uranus': Body.Uranus,
+  'Neptune': Body.Neptune,
+  'Pluto': Body.Pluto
+};
+
 /**
- * Calculate geocentric positions for all major bodies
+ * Get planet positions using astronomy-engine
  */
-export async function calculatePlanets(date: Date, latitude: number, longitude: number) {
-  const time = dateToAstroTime(date);
-  const results = [];
+export async function calculatePlanets(date: Date): Promise<PlanetsResult> {
+  const planets: PlanetData[] = [];
   
-  for (const body of BODIES) {
+  // Planet list in order
+  const planetNames: PlanetName[] = [
+    'Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 
+    'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'
+  ];
+  
+  for (const name of planetNames) {
     try {
-      let vec;
+      let vector;
       
-      if (body === Body.Moon) {
-        // GeoMoon returns vector directly
-        vec = GeoMoon(time);
+      if (name === 'Moon') {
+        // GeoMoon  returns geocentric equatorial vector for the Moon
+        vector = GeoMoon(date);
       } else {
-        // GeoVector returns vector from Earth to body
-        vec = GeoVector(body, time, true); // true = light travel time correction
+        // For other bodies, use GeoVector with Body enum
+        const body = planetToBody[name as Exclude<PlanetName, 'Moon'>];
+        vector = GeoVector(body, date, true);
       }
       
-      // Convert to ecliptic coordinates
-      const eclip = Ecliptic(vec);
+      // Ecliptic is a function, not a constructor
+      // It takes a vector and returns ecliptic coordinates
+      const ecliptic = Ecliptic(vector);
       
-      results.push({
-        name: getBodyName(body),
-        longitude: eclip.elon,  // Ecliptic longitude in degrees
-        latitude: eclip.elat,   // Ecliptic latitude in degrees
-        distance: vec.Length()  // Distance in AU
+      planets.push({
+        name,
+        longitude: ecliptic.elon,
+        latitude: ecliptic.elat,
+        distance: vector.Length()
       });
+      
     } catch (error) {
-      console.error(`Error calculating position for ${getBodyName(body)}:`, error);
-      // Push placeholder or skip
+      console.error(`Error calculating position for ${name}:`, error);
     }
   }
   
-  return results;
-}
-
-/**
- * Get human-readable planet names
- */
-function getBodyName(body: Body): string {
-  switch (body) {
-    case Body.Sun: return 'Sun';
-    case Body.Moon: return 'Moon';
-    case Body.Mercury: return 'Mercury';
-    case Body.Venus: return 'Venus';
-    case Body.Mars: return 'Mars';
-    case Body.Jupiter: return 'Jupiter';
-    case Body.Saturn: return 'Saturn';
-    case Body.Uranus: return 'Uranus';
-    case Body.Neptune: return 'Neptune';
-    case Body.Pluto: return 'Pluto';
-    default: return 'Unknown';
-  }
+  return { planets, houses: [] };
 }

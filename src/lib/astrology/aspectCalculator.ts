@@ -1,3 +1,22 @@
+export interface AspectDefinition {
+  name: string;
+  angle: number;
+  orb: number;
+  symbol: string;
+}
+
+export const ASPECTS: Record<string, AspectDefinition> = {
+  CONJUNCTION: { name: 'Conjunction', angle: 0, orb: 8, symbol: '☌' },
+  OPPOSITION: { name: 'Opposition', angle: 180, orb: 8, symbol: '☍' },
+  TRINE: { name: 'Trine', angle: 120, orb: 6, symbol: '△' },
+  SQUARE: { name: 'Square', angle: 90, orb: 6, symbol: '□' },
+  SEXTILE: { name: 'Sextile', angle: 60, orb: 4, symbol: '⚹' },
+  QUINCUNX: { name: 'Quincunx', angle: 150, orb: 3, symbol: '⚻' },
+  SEMISEXTILE: { name: 'Semisextile', angle: 30, orb: 2, symbol: '⚺' },
+  SEMISQUARE: { name: 'Semisquare', angle: 45, orb: 2, symbol: '∠' },
+  SESQUIQUADRATE: { name: 'Sesquiquadrate', angle: 135, orb: 2, symbol: '⚼' }
+};
+
 export interface Aspect {
   planet1: string;
   planet2: string;
@@ -5,27 +24,24 @@ export interface Aspect {
   angle: number;
   orb: number;
   symbol: string;
-  nature: 'harmonious' | 'challenging' | 'neutral';
+  isApplying: boolean;
 }
 
-export const ASPECTS = [
-  { name: 'Conjunction', angle: 0, orb: 8, symbol: '☌', nature: 'neutral' as const },
-  { name: 'Opposition', angle: 180, orb: 8, symbol: '☍', nature: 'challenging' as const },
-  { name: 'Trine', angle: 120, orb: 6, symbol: '△', nature: 'harmonious' as const },
-  { name: 'Square', angle: 90, orb: 6, symbol: '□', nature: 'challenging' as const },
-  { name: 'Sextile', angle: 60, orb: 4, symbol: '⚹', nature: 'harmonious' as const },
-  { name: 'Quincunx', angle: 150, orb: 3, symbol: '⚻', nature: 'challenging' as const },
-  { name: 'Semisextile', angle: 30, orb: 2, symbol: '⚺', nature: 'neutral' as const },
-  { name: 'Semisquare', angle: 45, orb: 2, symbol: '∠', nature: 'challenging' as const },
-  { name: 'Sesquiquadrate', angle: 135, orb: 2, symbol: '⚼', nature: 'challenging' as const }
-];
-
 /**
- * Calculate the shortest angular distance between two longitudes
+ * Calculate the angle between two longitudes (shortest path)
  */
 function getAngularDistance(long1: number, long2: number): number {
-  const diff = Math.abs(long1 - long2) % 360;
+  let diff = Math.abs(long1 - long2) % 360;
   return Math.min(diff, 360 - diff);
+}
+
+/**
+ * Determine if aspect is applying (simplified)
+ */
+function isApplyingAspect(long1: number, long2: number, targetAngle: number): boolean {
+  const currentDistance = getAngularDistance(long1, long2);
+  const diff = targetAngle - currentDistance;
+  return Math.abs(diff) < 1; // Within 1 degree
 }
 
 /**
@@ -44,7 +60,7 @@ export function calculateAspects(
       const distance = getAngularDistance(p1.longitude, p2.longitude);
       
       // Check each aspect type
-      for (const aspect of ASPECTS) {
+      for (const [key, aspect] of Object.entries(ASPECTS)) {
         const orb = Math.abs(distance - aspect.angle);
         
         if (orb <= aspect.orb) {
@@ -55,9 +71,9 @@ export function calculateAspects(
             angle: aspect.angle,
             orb: parseFloat(orb.toFixed(2)),
             symbol: aspect.symbol,
-            nature: aspect.nature
+            isApplying: isApplyingAspect(p1.longitude, p2.longitude, aspect.angle)
           });
-          break; // Only add the closest aspect
+          break; // Only record the closest aspect
         }
       }
     }
