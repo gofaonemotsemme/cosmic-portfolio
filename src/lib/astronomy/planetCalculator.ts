@@ -45,7 +45,7 @@ export async function calculatePlanets(date: Date): Promise<PlanetsResult> {
       let vector;
       
       if (name === 'Moon') {
-        // GeoMoon  returns geocentric equatorial vector for the Moon
+        // GeoMoon returns geocentric equatorial vector for the Moon
         vector = GeoMoon(date);
       } else {
         // For other bodies, use GeoVector with Body enum
